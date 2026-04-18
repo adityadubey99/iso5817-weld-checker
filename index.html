@@ -223,6 +223,26 @@
     background: #fff;
   }
   .iso-link:hover { background: #1b4965; color: #fff; }
+  /* Missing-field highlight when Evaluate is tapped incomplete */
+  @keyframes shakeRed {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+  }
+  .level-group.needs-attention {
+    border: 2px solid #c62828;
+    border-radius: 10px;
+    padding: 4px;
+    margin: -6px -6px 10px;
+    animation: shakeRed 0.35s ease-in-out 2;
+    background: #fdecea;
+  }
+  select.needs-attention,
+  input.needs-attention {
+    border-color: #c62828 !important;
+    background: #fdecea;
+    animation: shakeRed 0.35s ease-in-out 2;
+  }
 </style>
 </head>
 <body>
@@ -273,7 +293,7 @@
 
     <div id="inputsArea"></div>
 
-    <button class="primary" id="evaluateBtn" disabled>Evaluate</button>
+    <button class="primary" id="evaluateBtn">Evaluate</button>
 
     <div class="result" id="result">
       <h3 id="resultTitle"></h3>
@@ -1273,15 +1293,48 @@ function collectInputs() {
 }
 
 function updateState() {
-  const ready = selectedLevel && defectSelect.value;
-  const state = collectInputs();
-  const inputsReady = state && (state.def.inputs.length === 0 || state.allFilled);
-  evaluateBtn.disabled = !(ready && inputsReady);
+  // Clear any red highlight as the inspector fills things in
+  if (selectedLevel) levelGroup.classList.remove("needs-attention");
+  if (defectSelect.value) defectSelect.classList.remove("needs-attention");
+  document.querySelectorAll("#inputsArea input").forEach(el => {
+    if (el.value !== "") el.classList.remove("needs-attention");
+  });
 }
 
 evaluateBtn.addEventListener("click", () => {
+  // Validate inputs; highlight whatever is missing and scroll to the first one
+  let missing = false;
+  let firstMissing = null;
+  if (!selectedLevel) {
+    levelGroup.classList.add("needs-attention");
+    if (!firstMissing) firstMissing = levelGroup;
+    missing = true;
+  }
+  if (!defectSelect.value) {
+    defectSelect.classList.add("needs-attention");
+    if (!firstMissing) firstMissing = defectSelect;
+    missing = true;
+  }
   const state = collectInputs();
-  if (!state || !selectedLevel) return;
+  if (state && !state.allFilled) {
+    state.def.inputs.forEach(inp => {
+      const el = document.getElementById(`inp-${inp.key}`);
+      if (el && el.value === "") {
+        el.classList.add("needs-attention");
+        if (!firstMissing) firstMissing = el;
+      }
+    });
+    missing = true;
+  }
+  if (missing) {
+    hideResult();
+    if (firstMissing) {
+      firstMissing.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (firstMissing.focus) setTimeout(() => firstMissing.focus({ preventScroll: true }), 300);
+    }
+    return;
+  }
+
   const res = state.def.evaluate(state.vals, selectedLevel);
 
   result.className = "result";
