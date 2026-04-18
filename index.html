@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISO 5817 Weld Acceptance Checker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f6f8;
+    color: #1c2833;
+    line-height: 1.5;
+    padding: 16px;
+    min-height: 100vh;
+  }
+  .container { max-width: 720px; margin: 0 auto; }
+  header {
+    background: #1b4965;
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  header .title h1 { font-size: 1.25rem; margin-bottom: 4px; }
+  header .title p { font-size: 0.85rem; opacity: 0.85; }
+  header .brand {
+    background: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  header .brand svg { display: block; height: 30px; width: auto; }
+  header .brand .internal {
+    display: block;
+    font-size: 0.6rem;
+    color: #6b7280;
+    text-align: center;
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  @media (max-width: 480px) {
+    header { flex-direction: column; align-items: flex-start; }
+    header .brand { align-self: flex-end; }
+  }
+  .card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+  }
+  .card.standalone { border-radius: 10px; }
+  h2 { font-size: 1rem; margin-bottom: 12px; color: #1b4965; }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #34495e;
+  }
+  .level-group { display: flex; gap: 8px; margin-bottom: 16px; }
+  .level-btn {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid #d0d7de;
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.15s;
+  }
+  .level-btn:hover { border-color: #1b4965; }
+  .level-btn.active {
+    background: #1b4965;
+    color: #fff;
+    border-color: #1b4965;
+  }
+  .level-btn small {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 400;
+    opacity: 0.8;
+    margin-top: 2px;
+  }
+  select, input[type=number] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    background: #fff;
+  }
+  select:focus, input:focus { outline: 2px solid #1b4965; outline-offset: -1px; }
+  .input-group { margin-bottom: 14px; }
+  .input-row { display: flex; gap: 10px; }
+  .input-row .input-group { flex: 1; }
+  .hint {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 4px;
+  }
+  button.primary {
+    width: 100%;
+    padding: 14px;
+    background: #1b4965;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  button.primary:hover { background: #143a52; }
+  button.secondary {
+    background: #fff;
+    color: #1b4965;
+    border: 1px solid #1b4965;
+  }
+  button.secondary:hover { background: #eef4f8; }
+  .result {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: 8px;
+    display: none;
+  }
+  .result.ok { background: #e8f5e9; border-left: 5px solid #2e7d32; }
+  .result.notok { background: #fdecea; border-left: 5px solid #c62828; }
+  .result.na { background: #fff8e1; border-left: 5px solid #f9a825; }
+  .result h3 { margin-bottom: 6px; font-size: 1.1rem; }
+  .result.ok h3 { color: #1b5e20; }
+  .result.notok h3 { color: #b71c1c; }
+  .result.na h3 { color: #795500; }
+  .result .limit { font-size: 0.85rem; color: #333; margin-top: 8px; }
+  .result .limit code {
+    background: rgba(0,0,0,0.06);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 0.8rem;
+  }
+  .ref-num {
+    display: inline-block;
+    background: #e1e8ed;
+    color: #1b4965;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-right: 6px;
+  }
+  footer {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 24px;
+    padding: 12px;
+  }
+  .hidden { display: none !important; }
+  .schematic {
+    background: #fafbfc;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .schematic svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  .schematic-caption {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 8px;
+    text-align: center;
+    font-style: italic;
+  }
+  .legend {
+    font-size: 0.75rem;
+    color: #34495e;
+    margin-top: 6px;
+    text-align: center;
+  }
+  .legend code {
+    background: #eef2f5;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 0.72rem;
+    margin: 0 2px;
+  }
+  /* SVG styling */
+  .svg-base { fill: #c8d4de; stroke: #5a7a90; stroke-width: 1.2; }
+  .svg-weld { fill: #ffd98a; stroke: #a37a2c; stroke-width: 1.2; }
+  .svg-defect { fill: #e74c3c; stroke: #a93226; stroke-width: 1; opacity: 0.85; }
+  .svg-dim { stroke: #1b4965; stroke-width: 1; fill: none; }
+  .svg-dim-text { fill: #1b4965; font-size: 11px; font-family: "SF Mono", Monaco, monospace; font-weight: 600; }
+  .svg-note { fill: #6b7280; font-size: 10px; font-family: -apple-system, sans-serif; }
+  .svg-arrow { fill: #1b4965; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="title">
+      <h1>ISO 5817 Weld Acceptance Checker</h1>
+      <p>Fusion-welded joints — quality levels for imperfections</p>
+    </div>
+    <div class="brand" aria-label="Alstom — internal tool">
+      <div>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 329.832 90.954" role="img" aria-label="Alstom">
+          <g>
+            <path fill="#DC3223" d="M250.891,31.493l-2.798,2.97c4.517,7.097,5.144,16.161,0.952,23.733l1.533-0.026
+              C255.788,49.715,255.71,39.556,250.891,31.493z M238.625,33.199l1.52-1.6c-7.59-7.025-20.177-6.867-27.506,0.666
+              c-4.367,4.483-6.427,10.485-5.434,16.14l1.527-0.047c0.087-7.89,6.538-14.389,14.675-14.57
+              c8.314-0.229,15.218,6.142,15.394,14.252c0.223,8.131-6.3,14.85-14.606,15.072c-4.174,0.102-7.955-1.441-10.746-4.001
+              l-2.159,2.215c-9.611-8.874-9.979-23.694-0.892-33.029c7.334-7.545,18.562-9.264,27.651-5.06l0.119,0.134l1.168-1.302
+              c-11.564-6.719-26.828-4.807-36.562,5.194c-11.502,11.788-10.973,30.411,1.13,41.594l2.183-2.224
+              c4.78,4.38,10.334,6.573,16.817,6.39c13.078-0.346,23.406-10.941,23.076-23.671C245.811,42.956,243.007,37.239,238.625,33.199z"/>
+            <path fill="#1E3246" d="M89.217,23.185H78.221V67.77h31.147v-8.66h-20.15V23.185z M40.252,23.185L23.185,67.77h10.646
+              c1.938-6.624,10.381-11.63,18.242-12.328l-1.62-4.035c-3.306-0.434-8.164,0.096-11.11,1.373l7.195-18.863L60.482,67.77H71.11
+              L52.747,23.185H40.252z M151.013,31.814h14.654V67.77h11.267V31.814h14.726v-8.63h-40.646V31.814z M296.861,23.185L283.986,40.13
+              l-12.688-16.945h-9.885V67.77h11.265V40.528l10.551,14.41h1.607l10.533-14.41V67.77h11.279V23.185H296.861z M123.995,34.623
+              c0-3.583,8.13-6.704,20.81-2.149l0.737-8.803c-2.007-0.886-7.694-2.373-12.028-2.373c-9.237,0-19.708,3.401-19.708,14.481
+              c0,16.612,24.791,10.929,24.083,19.996c-0.276,3.52-5.524,4.375-9.957,4.375c-5.039,0-9.569-1.004-12.635-2.461l-1.052,9.564
+              c4.091,1.32,9.406,1.971,13.687,1.971c10.218,0,20.198-3.22,20.24-15.138C148.191,38.161,123.995,42.795,123.995,34.623z"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>1. Select Quality Level</h2>
+    <div class="level-group" id="levelGroup">
+      <button class="level-btn" data-level="B">B<small>Stringent</small></button>
+      <button class="level-btn" data-level="C">C<small>Intermediate</small></button>
+      <button class="level-btn" data-level="D">D<small>Moderate</small></button>
+    </div>
+
+    <h2>2. Select Imperfection</h2>
+    <div class="input-group">
+      <select id="defectSelect">
+        <option value="">-- Choose imperfection --</option>
+      </select>
+    </div>
+
+    <div id="inputsArea"></div>
+
+    <button class="primary" id="evaluateBtn" disabled>Evaluate</button>
+
+    <div class="result" id="result">
+      <h3 id="resultTitle"></h3>
+      <div id="resultDetail"></div>
+      <div class="limit" id="resultLimit"></div>
+    </div>
+  </div>
+
+  <footer>
+    Reference: ISO 5817:2014 Table 1. This app is an aid; final acceptance is the qualified inspector's responsibility.
+  </footer>
+</div>
+
+<script>
+// ISO 5817:2014 Table 1 — Limits for imperfections
+// h = imperfection height/depth (mm), t = wall thickness (mm), b = weld width (mm),
+// l = length (mm), dA = total area (mm2), d = pore/inclusion diameter (mm)
+// Each rule returns { ok: bool, limit: string } or { na: true, reason: string }
+
+const LEVELS = ["B", "C", "D"];
+
+// ---------- SVG SCHEMATICS ----------
+// Reusable arrow marker + dimension line helpers baked into each SVG.
+// Coordinate system: viewBox ~ 0 0 360 160
+const ARROW_DEFS = `<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M0,0 L10,5 L0,10 z" class="svg-arrow"/>
+  </marker>
+  <marker id="arrS" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M10,0 L0,5 L10,10 z" class="svg-arrow"/>
+  </marker>
+</defs>`;
+
+const SCHEMATICS = {
+  crack: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="140,70 180,50 220,70" class="svg-weld"/>
+    <path d="M170,52 L172,62 L168,75 L175,90 L170,108" class="svg-defect" fill="none" stroke-width="2"/>
+    <text x="200" y="55" class="svg-note">Crack (any type)</text>
+    <text x="180" y="140" class="svg-dim-text" text-anchor="middle">Never permitted — B / C / D</text>
+  </svg>`,
+
+  crater_crack: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="100,70 280,70 270,50 110,50" class="svg-weld"/>
+    <ellipse cx="255" cy="60" rx="14" ry="8" fill="#f5b7b1" stroke="#a93226"/>
+    <path d="M250,55 L258,65 M246,60 L264,60 M253,53 L258,67" class="svg-defect" fill="none" stroke-width="1.5"/>
+    <text x="180" y="140" class="svg-dim-text" text-anchor="middle">Crater crack at weld end — never permitted</text>
+  </svg>`,
+
+  surface_pore: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="120,70 240,70 225,50 135,50" class="svg-weld"/>
+    <circle cx="180" cy="58" r="7" class="svg-defect"/>
+    <line x1="173" y1="58" x2="187" y2="58" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="180" y="40" class="svg-dim-text" text-anchor="middle">d</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Pore breaking the weld surface</text>
+  </svg>`,
+
+  open_crater_pipe: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="100,70 250,70 240,50 110,50" class="svg-weld"/>
+    <path d="M235,50 Q240,72 245,50 Z" class="svg-defect"/>
+    <line x1="260" y1="50" x2="260" y2="65" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="268" y="60" class="svg-dim-text">h</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Shrinkage cavity open to the surface at weld end</text>
+  </svg>`,
+
+  end_crater_pipe: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="100,70 260,70 250,50 110,50" class="svg-weld"/>
+    <ellipse cx="250" cy="58" rx="10" ry="5" class="svg-defect"/>
+    <line x1="270" y1="53" x2="270" y2="63" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="278" y="60" class="svg-dim-text">h</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">End crater pipe (depression at run-off)</text>
+  </svg>`,
+
+  undercut_continuous: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <path d="M40,70 L130,70 Q140,70 140,62 L140,70 L220,70 Q220,62 230,70 L320,70 L320,110 L40,110 Z" class="svg-base"/>
+    <polygon points="140,70 180,48 220,70" class="svg-weld"/>
+    <path d="M130,70 Q140,70 140,62" class="svg-defect" fill="none" stroke-width="2"/>
+    <path d="M220,62 Q220,70 230,70" class="svg-defect" fill="none" stroke-width="2"/>
+    <line x1="138" y1="60" x2="138" y2="72" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="120" y="68" class="svg-dim-text" text-anchor="end">h</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Groove melted into parent metal at weld toe</text>
+  </svg>`,
+
+  shrinkage_groove: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <path d="M140,70 L175,52 Q180,58 185,52 L220,70 Z" class="svg-weld"/>
+    <path d="M175,52 Q180,60 185,52" class="svg-defect" fill="none" stroke-width="2"/>
+    <line x1="195" y1="52" x2="195" y2="60" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="205" y="58" class="svg-dim-text">h</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Groove along weld due to shrinkage on cooling</text>
+  </svg>`,
+
+  excess_weld_metal: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="80" width="280" height="40" class="svg-base"/>
+    <path d="M120,80 Q180,30 240,80 Z" class="svg-weld"/>
+    <line x1="120" y1="80" x2="240" y2="80" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="180" y="98" class="svg-dim-text" text-anchor="middle">b</text>
+    <line x1="260" y1="45" x2="260" y2="80" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="270" y="66" class="svg-dim-text">h</text>
+    <line x1="120" y1="80" x2="240" y2="80" stroke="#1b4965" stroke-dasharray="3,3"/>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Reinforcement above parent surface (butt weld)</text>
+  </svg>`,
+
+  excess_convexity: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="90" width="280" height="30" class="svg-base"/>
+    <rect x="160" y="30" width="40" height="60" class="svg-base"/>
+    <path d="M160,90 Q140,55 195,35" class="svg-weld" fill="#ffd98a" stroke="#a37a2c"/>
+    <line x1="150" y1="90" x2="190" y2="45" stroke="#1b4965" stroke-dasharray="3,3"/>
+    <line x1="150" y1="90" x2="190" y2="45" class="svg-dim"/>
+    <text x="170" y="75" class="svg-dim-text">b</text>
+    <line x1="130" y1="68" x2="148" y2="62" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="115" y="70" class="svg-dim-text" text-anchor="end">h</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Fillet-weld face more convex than nominal</text>
+  </svg>`,
+
+  excess_penetration: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="60" width="280" height="40" class="svg-base"/>
+    <polygon points="140,60 180,40 220,60" class="svg-weld"/>
+    <path d="M140,100 Q180,130 220,100 Z" class="svg-weld"/>
+    <line x1="140" y1="100" x2="220" y2="100" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="180" y="94" class="svg-dim-text" text-anchor="middle">b</text>
+    <line x1="240" y1="100" x2="240" y2="122" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="250" y="115" class="svg-dim-text">h</text>
+    <text x="180" y="150" class="svg-note" text-anchor="middle">Root bead protrudes beyond the underside</text>
+  </svg>`,
+
+  incorrect_weld_toe: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="90" width="280" height="30" class="svg-base"/>
+    <path d="M120,90 L180,45 L240,90 Z" class="svg-weld"/>
+    <path d="M150,90 A 25,25 0 0 1 165,72" class="svg-dim" fill="none"/>
+    <text x="155" y="82" class="svg-dim-text">α</text>
+    <line x1="120" y1="90" x2="240" y2="90" stroke="#1b4965" stroke-dasharray="3,3"/>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Angle between weld face and parent surface</text>
+  </svg>`,
+
+  overlap: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="90" width="280" height="30" class="svg-base"/>
+    <path d="M130,90 Q180,40 235,90 Q225,100 210,90 Z" class="svg-weld"/>
+    <path d="M210,90 Q218,98 225,90" class="svg-defect" fill="none" stroke-width="2"/>
+    <line x1="225" y1="88" x2="238" y2="88" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="245" y="91" class="svg-dim-text">h</text>
+    <line x1="130" y1="90" x2="235" y2="90" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="180" y="108" class="svg-dim-text" text-anchor="middle">b</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Weld metal rolls over parent without fusing</text>
+  </svg>`,
+
+  sagging: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <path d="M140,70 Q180,85 220,70 Z" class="svg-weld"/>
+    <line x1="140" y1="70" x2="220" y2="70" stroke="#1b4965" stroke-dasharray="3,3"/>
+    <line x1="180" y1="70" x2="180" y2="83" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="190" y="80" class="svg-dim-text">h</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Weld face below parent surface due to gravity/flow</text>
+  </svg>`,
+
+  burn_through: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <path d="M40,70 L160,70 L160,110 L40,110 Z" class="svg-base"/>
+    <path d="M200,70 L320,70 L320,110 L200,110 Z" class="svg-base"/>
+    <polygon points="160,70 200,70 195,50 165,50" class="svg-weld"/>
+    <path d="M160,70 Q180,130 200,70" class="svg-defect" fill="#fdecea"/>
+    <text x="180" y="140" class="svg-dim-text" text-anchor="middle">Hole through the weld — never permitted</text>
+  </svg>`,
+
+  incomplete_fill: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <path d="M40,70 L140,70 L160,90 L200,90 L220,70 L320,70 L320,110 L40,110 Z" class="svg-base"/>
+    <path d="M140,70 L160,90 L200,90 L220,70 Z" class="svg-weld"/>
+    <line x1="180" y1="70" x2="180" y2="90" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="190" y="83" class="svg-dim-text">h</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Groove not filled up to parent surface</text>
+  </svg>`,
+
+  asymmetry: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="100" width="280" height="30" class="svg-base"/>
+    <rect x="160" y="30" width="30" height="70" class="svg-base"/>
+    <polygon points="160,100 190,100 160,55" class="svg-weld"/>
+    <polygon points="190,100 230,100 190,80" class="svg-weld"/>
+    <line x1="160" y1="108" x2="160" y2="55" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="148" y="85" class="svg-dim-text" text-anchor="end">z1</text>
+    <line x1="190" y1="108" x2="230" y2="108" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="210" y="120" class="svg-dim-text" text-anchor="middle">z2</text>
+    <line x1="175" y1="92" x2="200" y2="80" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="205" y="72" class="svg-dim-text">a</text>
+    <text x="180" y="148" class="svg-note" text-anchor="middle">h = |z1 − z2| (leg-length difference)</text>
+  </svg>`,
+
+  root_concavity: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="60" width="280" height="40" class="svg-base"/>
+    <polygon points="140,60 180,40 220,60" class="svg-weld"/>
+    <path d="M140,100 Q180,85 220,100 Z" class="svg-weld"/>
+    <line x1="140" y1="100" x2="220" y2="100" stroke="#1b4965" stroke-dasharray="3,3"/>
+    <line x1="180" y1="100" x2="180" y2="88" class="svg-dim" marker-start="url(#arr)" marker-end="url(#arrS)"/>
+    <text x="190" y="98" class="svg-dim-text">h</text>
+    <line x1="30" y1="60" x2="30" y2="100" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="83" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Root bead sunk below parent underside</text>
+  </svg>`,
+
+  root_porosity: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="60" width="280" height="40" class="svg-base"/>
+    <polygon points="140,60 180,40 220,60" class="svg-weld"/>
+    <path d="M140,100 Q180,115 220,100 Z" class="svg-weld"/>
+    <circle cx="155" cy="103" r="2.5" class="svg-defect"/>
+    <circle cx="165" cy="108" r="2" class="svg-defect"/>
+    <circle cx="180" cy="110" r="3" class="svg-defect"/>
+    <circle cx="195" cy="108" r="2" class="svg-defect"/>
+    <circle cx="205" cy="104" r="2.5" class="svg-defect"/>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Spongy / porous root — no measurements</text>
+  </svg>`,
+
+  poor_restart: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="80" width="280" height="40" class="svg-base"/>
+    <path d="M60,80 Q80,55 100,80 Q120,60 140,80 Q160,55 180,80 L190,80 Q195,68 205,78 Q215,55 235,80 Q255,60 275,80 Q295,55 315,80 Z" class="svg-weld"/>
+    <circle cx="192" cy="78" r="7" fill="none" stroke="#c62828" stroke-width="1.5" stroke-dasharray="2,2"/>
+    <text x="192" y="60" class="svg-dim-text" text-anchor="middle">restart</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Irregularity at weld restart point — visual only</text>
+  </svg>`,
+
+  lack_of_fusion: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="140,70 180,45 220,70 210,110 150,110" class="svg-weld"/>
+    <path d="M148,70 L145,108" class="svg-defect" stroke-width="3" fill="none"/>
+    <line x1="135" y1="85" x2="143" y2="85" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="130" y="90" class="svg-dim-text" text-anchor="end">h</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Weld metal not fused to parent / previous bead</text>
+  </svg>`,
+
+  lack_of_penetration: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="140,70 180,45 220,70 210,100 150,100" class="svg-weld"/>
+    <rect x="155" y="100" width="50" height="10" class="svg-defect"/>
+    <line x1="215" y1="100" x2="215" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="225" y="108" class="svg-dim-text">h</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Root not reached — unfused region at bottom</text>
+  </svg>`,
+
+  gas_pore: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="140,70 180,45 220,70 215,110 145,110" class="svg-weld"/>
+    <circle cx="180" cy="85" r="8" class="svg-defect"/>
+    <line x1="172" y1="85" x2="188" y2="85" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="198" y="88" class="svg-dim-text">d</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Single internal spherical pore</text>
+  </svg>`,
+
+  porosity_uniform: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="120,70 180,40 240,70 232,110 128,110" class="svg-weld"/>
+    <circle cx="150" cy="85" r="3" class="svg-defect"/>
+    <circle cx="165" cy="95" r="2" class="svg-defect"/>
+    <circle cx="180" cy="80" r="4" class="svg-defect"/>
+    <circle cx="195" cy="95" r="2.5" class="svg-defect"/>
+    <circle cx="210" cy="85" r="3" class="svg-defect"/>
+    <circle cx="170" cy="105" r="2" class="svg-defect"/>
+    <circle cx="200" cy="72" r="2" class="svg-defect"/>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">% = (Σ pore area) / (projected weld area)</text>
+  </svg>`,
+
+  linear_porosity: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="120,70 180,45 240,70 232,110 128,110" class="svg-weld"/>
+    <circle cx="140" cy="90" r="3" class="svg-defect"/>
+    <circle cx="160" cy="90" r="3" class="svg-defect"/>
+    <circle cx="180" cy="90" r="3" class="svg-defect"/>
+    <circle cx="200" cy="90" r="3" class="svg-defect"/>
+    <circle cx="220" cy="90" r="3" class="svg-defect"/>
+    <line x1="177" y1="90" x2="183" y2="90" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="180" y="78" class="svg-dim-text" text-anchor="middle">d</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Pores aligned parallel to weld axis</text>
+  </svg>`,
+
+  solid_inclusion: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="120,70 180,45 240,70 232,110 128,110" class="svg-weld"/>
+    <path d="M150,85 L180,80 L210,88 L195,95 L165,92 Z" class="svg-defect"/>
+    <line x1="150" y1="100" x2="210" y2="100" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="180" y="112" class="svg-dim-text" text-anchor="middle">l</text>
+    <line x1="30" y1="70" x2="30" y2="110" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Slag / flux / oxide trapped in weld</text>
+  </svg>`,
+
+  metallic_inclusion: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="120,70 180,45 240,70 232,110 128,110" class="svg-weld"/>
+    <rect x="172" y="78" width="16" height="14" class="svg-defect"/>
+    <line x1="172" y1="85" x2="188" y2="85" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="200" y="88" class="svg-dim-text">d</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">W / tungsten inclusion (copper not permitted)</text>
+  </svg>`,
+
+  copper_inclusion: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="70" width="280" height="40" class="svg-base"/>
+    <polygon points="120,70 180,45 240,70 232,110 128,110" class="svg-weld"/>
+    <rect x="170" y="78" width="20" height="14" fill="#b87333" stroke="#6e4216"/>
+    <text x="180" y="89" fill="#fff" font-size="9" text-anchor="middle" font-weight="600">Cu</text>
+    <text x="180" y="140" class="svg-dim-text" text-anchor="middle">Copper inclusion — never permitted (B/C/D)</text>
+  </svg>`,
+
+  linear_misalignment_plate: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="60" width="130" height="40" class="svg-base"/>
+    <rect x="190" y="72" width="130" height="40" class="svg-base"/>
+    <polygon points="170,60 190,72 190,100 170,100" class="svg-weld"/>
+    <line x1="170" y1="60" x2="170" y2="72" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="158" y="68" class="svg-dim-text" text-anchor="end">h</text>
+    <line x1="30" y1="60" x2="30" y2="100" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="83" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="180" y="140" class="svg-note" text-anchor="middle">Edge offset between plates at butt weld</text>
+  </svg>`,
+
+  linear_misalignment_pipe: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <path d="M40,55 L170,55 L170,105 L40,105 Z" class="svg-base"/>
+    <path d="M190,65 L320,65 L320,115 L190,115 Z" class="svg-base"/>
+    <polygon points="170,55 190,65 190,105 170,105" class="svg-weld"/>
+    <line x1="170" y1="55" x2="170" y2="65" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="158" y="63" class="svg-dim-text" text-anchor="end">h</text>
+    <text x="180" y="145" class="svg-note" text-anchor="middle">Offset at circumferential pipe joint</text>
+  </svg>`,
+
+  incorrect_root_gap: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="90" width="280" height="30" class="svg-base"/>
+    <rect x="140" y="30" width="30" height="70" class="svg-base"/>
+    <rect x="170" y="30" width="10" height="60" fill="#fdecea" stroke="#c62828"/>
+    <polygon points="180,90 210,90 180,60" class="svg-weld"/>
+    <line x1="170" y1="100" x2="180" y2="100" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="175" y="115" class="svg-dim-text" text-anchor="middle">h</text>
+    <line x1="30" y1="90" x2="30" y2="120" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="108" class="svg-dim-text" text-anchor="end">t</text>
+    <text x="200" y="145" class="svg-note" text-anchor="middle">Gap between members at fillet root</text>
+  </svg>`,
+
+  multiple_projected_area: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="50" width="280" height="80" class="svg-base"/>
+    <rect x="60" y="50" width="240" height="80" fill="#fff8e1" stroke="#1b4965" stroke-dasharray="4,3"/>
+    <circle cx="90" cy="75" r="5" class="svg-defect"/>
+    <ellipse cx="130" cy="95" rx="12" ry="4" class="svg-defect"/>
+    <rect x="170" y="65" width="20" height="10" class="svg-defect"/>
+    <circle cx="220" cy="100" r="4" class="svg-defect"/>
+    <ellipse cx="265" cy="80" rx="10" ry="5" class="svg-defect"/>
+    <text x="180" y="42" class="svg-dim-text" text-anchor="middle">reference area = 100·t × wₚ</text>
+    <text x="180" y="150" class="svg-note" text-anchor="middle">Sum of projected defect areas / reference area × 100</text>
+  </svg>`,
+
+  multiple_cross_section: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
+    <rect x="40" y="50" width="280" height="80" class="svg-base"/>
+    <circle cx="120" cy="75" r="6" class="svg-defect"/>
+    <rect x="170" y="80" width="30" height="8" class="svg-defect"/>
+    <ellipse cx="240" cy="100" rx="8" ry="5" class="svg-defect"/>
+    <line x1="114" y1="75" x2="114" y2="130" stroke="#1b4965" stroke-dasharray="2,2"/>
+    <line x1="170" y1="80" x2="170" y2="130" stroke="#1b4965" stroke-dasharray="2,2"/>
+    <line x1="240" y1="100" x2="240" y2="130" stroke="#1b4965" stroke-dasharray="2,2"/>
+    <line x1="114" y1="140" x2="126" y2="140" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="120" y="152" class="svg-dim-text" text-anchor="middle">h₁</text>
+    <line x1="170" y1="140" x2="200" y2="140" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="185" y="152" class="svg-dim-text" text-anchor="middle">h₂</text>
+    <line x1="232" y1="140" x2="248" y2="140" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="240" y="152" class="svg-dim-text" text-anchor="middle">h₃</text>
+    <line x1="30" y1="50" x2="30" y2="130" class="svg-dim" marker-start="url(#arrS)" marker-end="url(#arr)"/>
+    <text x="20" y="93" class="svg-dim-text" text-anchor="end">t</text>
+  </svg>`
+};
+
+// Helper: evaluate piecewise limit expressed as h <= min(factor*t, cap)
+const cap = (h, factor, t, maxCap) => {
+  const limit = Math.min(factor * t, maxCap);
+  return { ok: h <= limit, limit: `h ≤ min(${factor}·t, ${maxCap}) = ${limit.toFixed(2)} mm` };
+};
+
+const DEFECTS = [
+  // ---------- SURFACE IMPERFECTIONS ----------
+  {
+    id: "crack",
+    ref: "1.1",
+    name: "Crack",
+    inputs: [],
+    evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level (B/C/D)" })
+  },
+  {
+    id: "crater_crack",
+    ref: "1.2",
+    name: "Crater crack",
+    inputs: [],
+    evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level (B/C/D)" })
+  },
+  {
+    id: "surface_pore",
+    ref: "1.3",
+    name: "Surface pore",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "d", label: "Pore diameter d (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, d } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      const factor = level === "C" ? 0.2 : 0.3;
+      const capVal = level === "C" ? 2 : 3;
+      const limit = Math.min(factor * t, capVal);
+      return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm (single pore, isolated)` };
+    }
+  },
+  {
+    id: "open_crater_pipe",
+    ref: "1.4",
+    name: "Open crater pipe",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Crater pipe depth h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      const factor = level === "C" ? 0.1 : 0.2;
+      const capVal = level === "C" ? 1 : 2;
+      return cap(h, factor, t, capVal);
+    }
+  },
+  {
+    id: "end_crater_pipe",
+    ref: "1.5",
+    name: "End crater pipe",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "End crater pipe depth h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      const factor = level === "C" ? 0.1 : 0.2;
+      const capVal = level === "C" ? 1 : 2;
+      return cap(h, factor, t, capVal);
+    }
+  },
+  {
+    id: "undercut_continuous",
+    ref: "1.6 / 1.7",
+    name: "Undercut (continuous / intermittent)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Undercut depth h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (t < 3) {
+        // Short weld category: h ≤ 0.1·t (B not permitted for smooth, but simplified here)
+        const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+        const limit = factor * t;
+        return { ok: h <= limit, limit: `h ≤ ${factor}·t = ${limit.toFixed(2)} mm (0.5 ≤ t < 3)` };
+      }
+      // t ≥ 3
+      const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+      const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
+      return cap(h, factor, t, capVal);
+    }
+  },
+  {
+    id: "shrinkage_groove",
+    ref: "1.8",
+    name: "Shrinkage groove",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Groove depth h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+      const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
+      return cap(h, factor, t, capVal);
+    }
+  },
+  {
+    id: "excess_weld_metal",
+    ref: "1.9",
+    name: "Excess weld metal (butt weld)",
+    inputs: [
+      { key: "b", label: "Weld width b (mm)", min: 0 },
+      { key: "h", label: "Excess height h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { b, h } = v;
+      const factor = level === "B" ? 0.1 : level === "C" ? 0.15 : 0.25;
+      const capVal = level === "B" ? 5 : level === "C" ? 7 : 10;
+      const limit = Math.min(1 + factor * b, capVal);
+      return { ok: h <= limit, limit: `h ≤ min(1 mm + ${factor}·b, ${capVal}) = ${limit.toFixed(2)} mm` };
+    }
+  },
+  {
+    id: "excess_convexity",
+    ref: "1.10",
+    name: "Excessive convexity (fillet weld)",
+    inputs: [
+      { key: "b", label: "Weld width b (mm)", min: 0 },
+      { key: "h", label: "Convexity h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { b, h } = v;
+      const factor = level === "B" ? 0.1 : level === "C" ? 0.15 : 0.25;
+      const capVal = level === "B" ? 3 : level === "C" ? 4 : 5;
+      const limit = Math.min(1 + factor * b, capVal);
+      return { ok: h <= limit, limit: `h ≤ min(1 mm + ${factor}·b, ${capVal}) = ${limit.toFixed(2)} mm` };
+    }
+  },
+  {
+    id: "excess_penetration",
+    ref: "1.11",
+    name: "Excessive penetration",
+    inputs: [
+      { key: "b", label: "Weld width b (mm)", min: 0 },
+      { key: "h", label: "Penetration excess h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { b, h } = v;
+      const factor = level === "B" ? 0.1 : level === "C" ? 0.2 : 0.25;
+      const capVal = level === "B" ? 3 : level === "C" ? 4 : 5;
+      const limit = Math.min(1 + factor * b, capVal);
+      return { ok: h <= limit, limit: `h ≤ min(1 mm + ${factor}·b, ${capVal}) = ${limit.toFixed(2)} mm` };
+    }
+  },
+  {
+    id: "incorrect_weld_toe",
+    ref: "1.12",
+    name: "Incorrect weld toe angle",
+    inputs: [
+      { key: "angle", label: "Toe angle α (degrees)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { angle } = v;
+      const minAngle = level === "B" ? 150 : level === "C" ? 110 : 90;
+      return { ok: angle >= minAngle, limit: `α ≥ ${minAngle}° (Level ${level})` };
+    }
+  },
+  {
+    id: "overlap",
+    ref: "1.13",
+    name: "Overlap",
+    inputs: [
+      { key: "b", label: "Weld width b (mm)", min: 0 },
+      { key: "h", label: "Overlap h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      if (level === "B" || level === "C") return { ok: false, limit: "Not permitted (Level B and C)" };
+      const { b, h } = v;
+      const limit = 0.2 * b;
+      return { ok: h <= limit, limit: `h ≤ 0.2·b = ${limit.toFixed(2)} mm (Level D only)` };
+    }
+  },
+  {
+    id: "sagging",
+    ref: "1.14",
+    name: "Sagging / incompletely filled groove",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Depth h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B, short imperfections only)" };
+      const factor = level === "C" ? 0.1 : 0.25;
+      const capVal = level === "C" ? 0.5 : 1.0;
+      return cap(h, factor, t, capVal);
+    }
+  },
+  {
+    id: "burn_through",
+    ref: "1.15",
+    name: "Burn-through",
+    inputs: [],
+    evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level" })
+  },
+  {
+    id: "incomplete_fill",
+    ref: "1.16",
+    name: "Incompletely filled groove",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Depth h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      const factor = level === "C" ? 0.1 : 0.25;
+      const capVal = level === "C" ? 0.5 : 1.0;
+      return cap(h, factor, t, capVal);
+    }
+  },
+  {
+    id: "asymmetry",
+    ref: "1.17",
+    name: "Excessive asymmetry (fillet weld)",
+    inputs: [
+      { key: "a", label: "Nominal throat a (mm)", min: 0 },
+      { key: "h", label: "Leg-length difference h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { a, h } = v;
+      const factor = level === "B" ? 0.15 : level === "C" ? 0.2 : 0.25;
+      const addVal = level === "B" ? 1.5 : level === "C" ? 2 : 3;
+      const limit = factor * a + addVal;
+      return { ok: h <= limit, limit: `h ≤ ${factor}·a + ${addVal} = ${limit.toFixed(2)} mm` };
+    }
+  },
+  {
+    id: "root_concavity",
+    ref: "1.18",
+    name: "Root concavity",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Concavity h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+      const capVal = level === "B" ? 0.5 : level === "C" ? 1.0 : 2.0;
+      return cap(h, factor, t, capVal);
+    }
+  },
+  {
+    id: "root_porosity",
+    ref: "1.19",
+    name: "Root porosity (spongy root)",
+    inputs: [],
+    evaluate: (v, level) => {
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      return { ok: true, limit: "Permitted if local (Level C/D). Verify by visual/NDT." };
+    }
+  },
+  {
+    id: "poor_restart",
+    ref: "1.20",
+    name: "Poor restart",
+    inputs: [],
+    evaluate: (v, level) => {
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      return { ok: true, limit: "Permitted (Level C/D) subject to visual assessment." };
+    }
+  },
+
+  // ---------- INTERNAL IMPERFECTIONS ----------
+  {
+    id: "lack_of_fusion",
+    ref: "2.1",
+    name: "Lack of fusion (incl. micro)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Defect height h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B" || level === "C") return { ok: false, limit: "Not permitted (Level B and C)" };
+      const limit = Math.min(0.4 * t, 4);
+      return { ok: h <= limit, limit: `h ≤ min(0.4·t, 4) = ${limit.toFixed(2)} mm (Level D only, intermittent)` };
+    }
+  },
+  {
+    id: "lack_of_penetration",
+    ref: "2.2",
+    name: "Lack of penetration",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Defect height h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      if (level === "C") {
+        const limit = Math.min(0.1 * t, 1.5);
+        return { ok: h <= limit, limit: `h ≤ min(0.1·t, 1.5) = ${limit.toFixed(2)} mm (short only)` };
+      }
+      const limit = Math.min(0.2 * t, 2);
+      return { ok: h <= limit, limit: `h ≤ min(0.2·t, 2) = ${limit.toFixed(2)} mm (Level D)` };
+    }
+  },
+  {
+    id: "gas_pore",
+    ref: "2.3",
+    name: "Gas pore (single, internal)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "d", label: "Pore diameter d (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, d } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const factor = level === "B" ? 0.2 : level === "C" ? 0.3 : 0.4;
+      const capVal = level === "B" ? 3 : level === "C" ? 4 : 5;
+      const limit = Math.min(factor * t, capVal);
+      return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm` };
+    }
+  },
+  {
+    id: "porosity_uniform",
+    ref: "2.4",
+    name: "Uniformly distributed / clustered porosity",
+    inputs: [
+      { key: "pct", label: "Porosity area % (in projected area)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { pct } = v;
+      const maxPct = level === "B" ? 1 : level === "C" ? 2 : 5;
+      return { ok: pct <= maxPct, limit: `Area ≤ ${maxPct}% of projected area (Level ${level})` };
+    }
+  },
+  {
+    id: "linear_porosity",
+    ref: "2.5",
+    name: "Linear porosity",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "d", label: "Pore diameter d (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, d } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      const factor = level === "C" ? 0.2 : 0.3;
+      const capVal = level === "C" ? 2 : 3;
+      const limit = Math.min(factor * t, capVal);
+      return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm (single pore in line)` };
+    }
+  },
+  {
+    id: "solid_inclusion",
+    ref: "2.6",
+    name: "Solid inclusion (slag, flux, oxide)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "l", label: "Inclusion length l (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, l } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const factor = level === "B" ? 0.2 : level === "C" ? 0.3 : 0.4;
+      const capVal = level === "B" ? 4 : level === "C" ? 6 : 8;
+      const limit = Math.min(factor * t, capVal);
+      return { ok: l <= limit, limit: `l ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm` };
+    }
+  },
+  {
+    id: "metallic_inclusion",
+    ref: "2.7",
+    name: "Metallic inclusion (Cu excluded)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "d", label: "Inclusion size d (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, d } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const factor = level === "B" ? 0.2 : level === "C" ? 0.3 : 0.4;
+      const capVal = level === "B" ? 2 : level === "C" ? 3 : 4;
+      const limit = Math.min(factor * t, capVal);
+      return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm. Copper inclusions not permitted.` };
+    }
+  },
+  {
+    id: "copper_inclusion",
+    ref: "2.7a",
+    name: "Copper inclusion",
+    inputs: [],
+    evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level" })
+  },
+
+  // ---------- JOINT GEOMETRY ----------
+  {
+    id: "linear_misalignment_plate",
+    ref: "3.1",
+    name: "Linear misalignment (plates / long. welds)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Misalignment h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const factor = level === "B" ? 0.1 : level === "C" ? 0.15 : 0.25;
+      const capVal = level === "B" ? 3 : level === "C" ? 4 : 5;
+      const limit = Math.min(factor * t, capVal);
+      return { ok: h <= limit, limit: `h ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm` };
+    }
+  },
+  {
+    id: "linear_misalignment_pipe",
+    ref: "3.1b",
+    name: "Linear misalignment (circum. welds in pipes)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Misalignment h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const factor = level === "B" ? 0.1 : level === "C" ? 0.15 : 0.25;
+      const capVal = level === "B" ? 2 : level === "C" ? 3 : 4;
+      const limit = Math.min(factor * t, capVal);
+      return { ok: h <= limit, limit: `h ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm` };
+    }
+  },
+  {
+    id: "incorrect_root_gap",
+    ref: "3.2",
+    name: "Incorrect root gap (fillet welds)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "h", label: "Gap h (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const factor = level === "B" ? 0.2 : level === "C" ? 0.3 : 0.5;
+      const addVal = level === "B" ? 0.5 : level === "C" ? 1 : 2;
+      const limit = factor * t + addVal;
+      return { ok: h <= limit, limit: `h ≤ ${factor}·t + ${addVal} = ${limit.toFixed(2)} mm. Larger gaps may be acceptable if throat increased.` };
+    }
+  },
+
+  // ---------- MULTIPLE IMPERFECTIONS ----------
+  {
+    id: "multiple_projected_area",
+    ref: "4.1",
+    name: "Multiple imperfections (projected area)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "pct", label: "Sum of projected defect areas % (in 100·t × wp area)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, pct } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const maxPct = level === "B" ? 4 : level === "C" ? 8 : 16;
+      return { ok: pct <= maxPct, limit: `Σ projected areas ≤ ${maxPct}% (in reference area) for Level ${level}` };
+    }
+  },
+  {
+    id: "multiple_cross_section",
+    ref: "4.2",
+    name: "Multiple imperfections (cross-section)",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "pct", label: "Sum of defect heights as % of t", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, pct } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      const maxPct = level === "B" ? 10 : level === "C" ? 20 : 30;
+      return { ok: pct <= maxPct, limit: `Σ h ≤ ${maxPct}% of t (in cross-section) for Level ${level}` };
+    }
+  }
+];
+
+// ---------- UI WIRING ----------
+let selectedLevel = null;
+
+const levelGroup = document.getElementById("levelGroup");
+const defectSelect = document.getElementById("defectSelect");
+const inputsArea = document.getElementById("inputsArea");
+const evaluateBtn = document.getElementById("evaluateBtn");
+const result = document.getElementById("result");
+const resultTitle = document.getElementById("resultTitle");
+const resultDetail = document.getElementById("resultDetail");
+const resultLimit = document.getElementById("resultLimit");
+
+// Populate defects
+DEFECTS.forEach(d => {
+  const opt = document.createElement("option");
+  opt.value = d.id;
+  opt.textContent = `${d.ref}  ·  ${d.name}`;
+  defectSelect.appendChild(opt);
+});
+
+// Level buttons
+levelGroup.querySelectorAll(".level-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    levelGroup.querySelectorAll(".level-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedLevel = btn.dataset.level;
+    updateState();
+  });
+});
+
+defectSelect.addEventListener("change", () => {
+  renderInputs();
+  updateState();
+  hideResult();
+});
+
+function renderInputs() {
+  inputsArea.innerHTML = "";
+  const def = DEFECTS.find(d => d.id === defectSelect.value);
+  if (!def) return;
+
+  const svg = SCHEMATICS[def.id];
+  if (svg) {
+    const wrap = document.createElement("div");
+    wrap.className = "schematic";
+    wrap.innerHTML = svg;
+    const cap = document.createElement("div");
+    cap.className = "schematic-caption";
+    cap.textContent = `Ref ${def.ref} — ${def.name}`;
+    wrap.appendChild(cap);
+    if (def.inputs.length > 0) {
+      const legend = document.createElement("div");
+      legend.className = "legend";
+      legend.innerHTML = "Measure: " + def.inputs.map(i =>
+        `<code>${i.key}</code>`
+      ).join(" · ");
+      wrap.appendChild(legend);
+    }
+    inputsArea.appendChild(wrap);
+  }
+
+  if (def.inputs.length === 0) {
+    const p = document.createElement("p");
+    p.className = "hint";
+    p.style.marginBottom = "12px";
+    p.textContent = "No measurements required — judgement is binary per the standard.";
+    inputsArea.appendChild(p);
+    return;
+  }
+  const rows = [];
+  let row = document.createElement("div");
+  row.className = "input-row";
+  def.inputs.forEach((inp, i) => {
+    const group = document.createElement("div");
+    group.className = "input-group";
+    const label = document.createElement("label");
+    label.textContent = inp.label;
+    label.htmlFor = `inp-${inp.key}`;
+    const input = document.createElement("input");
+    input.type = "number";
+    input.id = `inp-${inp.key}`;
+    input.dataset.key = inp.key;
+    input.step = "0.01";
+    input.min = "0";
+    input.placeholder = "0.00";
+    input.addEventListener("input", updateState);
+    group.appendChild(label);
+    group.appendChild(input);
+    row.appendChild(group);
+    if (row.children.length === 2 || i === def.inputs.length - 1) {
+      inputsArea.appendChild(row);
+      row = document.createElement("div");
+      row.className = "input-row";
+    }
+  });
+}
+
+function collectInputs() {
+  const def = DEFECTS.find(d => d.id === defectSelect.value);
+  if (!def) return null;
+  const vals = {};
+  let allFilled = true;
+  def.inputs.forEach(inp => {
+    const el = document.getElementById(`inp-${inp.key}`);
+    if (!el || el.value === "") { allFilled = false; return; }
+    vals[inp.key] = parseFloat(el.value);
+  });
+  return { def, vals, allFilled };
+}
+
+function updateState() {
+  const ready = selectedLevel && defectSelect.value;
+  const state = collectInputs();
+  const inputsReady = state && (state.def.inputs.length === 0 || state.allFilled);
+  evaluateBtn.disabled = !(ready && inputsReady);
+}
+
+evaluateBtn.addEventListener("click", () => {
+  const state = collectInputs();
+  if (!state || !selectedLevel) return;
+  const res = state.def.evaluate(state.vals, selectedLevel);
+
+  result.className = "result";
+  if (res.na) {
+    result.classList.add("na");
+    resultTitle.textContent = "⚠ Not applicable";
+    resultDetail.innerHTML = `<span class="ref-num">${state.def.ref}</span>${state.def.name} — Level ${selectedLevel}`;
+    resultLimit.textContent = res.reason;
+  } else if (res.ok) {
+    result.classList.add("ok");
+    resultTitle.textContent = "✓ ACCEPTABLE (OK)";
+    resultDetail.innerHTML = `<span class="ref-num">${state.def.ref}</span>${state.def.name} — Level ${selectedLevel}`;
+    resultLimit.innerHTML = `Limit: <code>${res.limit}</code>`;
+  } else {
+    result.classList.add("notok");
+    resultTitle.textContent = "✗ NOT ACCEPTABLE (NOT OK)";
+    resultDetail.innerHTML = `<span class="ref-num">${state.def.ref}</span>${state.def.name} — Level ${selectedLevel}`;
+    resultLimit.innerHTML = `Limit: <code>${res.limit}</code>`;
+  }
+  result.style.display = "block";
+});
+
+function hideResult() { result.style.display = "none"; }
+</script>
+</body>
+</html>
