@@ -356,6 +356,7 @@ const SCHEMATICS = {
   </svg>`,
 
  // Commenting this par of code as open crater pipe is not part of ISO 5817
+ 
   // open_crater_pipe: `<svg viewBox="0 0 360 160" xmlns="http://www.w3.org/2000/svg">${ARROW_DEFS}
   //   <rect x="40" y="70" width="280" height="40" class="svg-base"/>
   //   <polygon points="100,70 250,70 240,50 110,50" class="svg-weld"/>
@@ -720,23 +721,23 @@ const DEFECTS = [
       return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm (single pore, isolated)` };
     }
   },
-  {
-    id: "open_crater_pipe",
-    ref: "1.4",
-    name: "Open crater pipe",
-    inputs: [
-      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
-      { key: "h", label: "Crater pipe depth h (mm)", min: 0 }
-    ],
-    evaluate: (v, level) => {
-      const { t, h } = v;
-      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
-      const factor = level === "C" ? 0.1 : 0.2;
-      const capVal = level === "C" ? 1 : 2;
-      return cap(h, factor, t, capVal);
-    }
-  },
+  // {
+  //   id: "open_crater_pipe",
+  //   ref: "1.4",
+  //   name: "Open crater pipe",
+  //   inputs: [
+  //     { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+  //     { key: "h", label: "Crater pipe depth h (mm)", min: 0 }
+  //   ],
+  //   evaluate: (v, level) => {
+  //     const { t, h } = v;
+  //     if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+  //     if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+  //     const factor = level === "C" ? 0.1 : 0.2;
+  //     const capVal = level === "C" ? 1 : 2;
+  //     return cap(h, factor, t, capVal);
+  //   }
+  // },
   {
     id: "end_crater_pipe",
     ref: "1.5",
