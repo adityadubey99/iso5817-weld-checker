@@ -763,62 +763,62 @@ const DEFECTS = [
       { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
       { key: "h", label: "Undercut depth h (mm)", min: 0 }
     ],
-    // evaluate: (v, level) => {
-    //   const { t, h } = v;
-    //   if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-    //   if (t < 3) {
-    //     // Short weld category: h ≤ 0.1·t (B not permitted for smooth, but simplified here)
-    //     const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
-    //     const limit = factor * t;
-    //     return { ok: h <= limit, limit: `h ≤ ${factor}·t = ${limit.toFixed(2)} mm (0.5 ≤ t < 3)` };
-    //   }
-    //   // t ≥ 3
-    //   const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
-    //   const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
-    //   return cap(h, factor, t, capVal);
+    evaluate: (v, level) => {
+      const { t, h } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (t < 3) {
+        // Short weld category: h ≤ 0.1·t (B not permitted for smooth, but simplified here)
+        const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+        const limit = factor * t;
+        return { ok: h <= limit, limit: `h ≤ ${factor}·t = ${limit.toFixed(2)} mm (0.5 ≤ t < 3)` };
+      }
+      // t ≥ 3
+      const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+      const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
+      return cap(h, factor, t, capVal);
 
-     evaluate: (v, level) => {
-  const { t, h } = v;
+  //    evaluate: (v, level) => {
+  // const { t, h } = v;
 
-  if (t < 0.5) {
-    return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-  }
+  // if (t < 0.5) {
+  //   return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+  // }
 
-  // 0.5 ≤ t ≤ 3
-  if (t <= 3) {
-    if (level === "B") {
-      return { ok: false, reason: "Not permitted for quality level B when 0.5 ≤ t ≤ 3 mm" };
-    }
+  // // 0.5 ≤ t ≤ 3
+  // if (t <= 3) {
+  //   if (level === "B") {
+  //     return { ok: false, reason: "Not permitted for quality level B when 0.5 ≤ t ≤ 3 mm" };
+  //   }
 
-    const factor = level === "C" ? 0.1 : 0.2; // C or D
-    const limit = factor * t;
+  //   const factor = level === "C" ? 0.1 : 0.2; // C or D
+  //   const limit = factor * t;
 
-    return {
-      ok: h <= limit,
-      limit: `h ≤ ${factor}·t = ${limit.toFixed(2)} mm (0.5 ≤ t ≤ 3)`
-    };
-  }
+  //   return {
+  //     ok: h <= limit,
+  //     limit: `h ≤ ${factor}·t = ${limit.toFixed(2)} mm (0.5 ≤ t ≤ 3)`
+  //   };
+  // }
 
-  // t > 3
-  let factor, maxCap;
+  // // t > 3
+  // let factor, maxCap;
 
-  if (level === "B") {
-    factor = 0.05;
-    maxCap = 0.5;
-  } else if (level === "C") {
-    factor = 0.1;
-    maxCap = 0.5;
-  } else { // D
-    factor = 0.2;
-    maxCap = 1.0;
-  }
+  // if (level === "B") {
+  //   factor = 0.05;
+  //   maxCap = 0.5;
+  // } else if (level === "C") {
+  //   factor = 0.1;
+  //   maxCap = 0.5;
+  // } else { // D
+  //   factor = 0.2;
+  //   maxCap = 1.0;
+  // }
 
-  const limit = Math.min(factor * t, maxCap);
+  // const limit = Math.min(factor * t, maxCap);
 
-  return {
-    ok: h <= limit,
-    limit: `h ≤ ${factor}·t but max ${maxCap} mm → ${limit.toFixed(2)} mm (t > 3)`
-  };
+  // return {
+  //   ok: h <= limit,
+  //   limit: `h ≤ ${factor}·t but max ${maxCap} mm → ${limit.toFixed(2)} mm (t > 3)`
+  // };
   },
   {
     id: "shrinkage_groove",
