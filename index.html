@@ -775,7 +775,9 @@ const DEFECTS = [
       // t ≥ 3
       const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
       const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
-      return cap(h, factor, t, capVal);
+      return cap(h, factor, t, capVal); 
+    }
+  },
 
   //    evaluate: (v, level) => {
   // const { t, h } = v;
@@ -819,7 +821,7 @@ const DEFECTS = [
   //   ok: h <= limit,
   //   limit: `h ≤ ${factor}·t but max ${maxCap} mm → ${limit.toFixed(2)} mm (t > 3)`
   // };
-  },
+  
   {
     id: "shrinkage_groove",
     ref: "1.8",
