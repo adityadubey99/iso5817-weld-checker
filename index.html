@@ -783,7 +783,7 @@ const DEFECTS = [
       if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
       
       if (t < 3.0 && level === "B") {
-       return { na: true, reason: "Not permitted for t < 3 mm at level B" };
+       return { ok: false, limit: "Not permitted for t < 3 mm at level B" };
       }
      if (t < 3.0){
       const factor = level === "C" ? 0.1 : level === "D" ? 0.2;
@@ -807,6 +807,7 @@ const DEFECTS = [
     evaluate: (v, level) => {
       const { t, h } = v;
       if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+     if (t < 3.0 && level === "B") return { ok: false, limit: "Not permitted for level B"};
       const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
       const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
       return cap(h, factor, t, capVal);
