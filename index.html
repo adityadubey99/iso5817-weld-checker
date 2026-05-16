@@ -696,6 +696,13 @@ const DEFECTS = [
     inputs: [],
     evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level (B/C/D)" })
   },
+ {
+    id: "lack_of_fusion",
+    ref: "1.5",
+    name: "Lack of fusion",
+    inputs: [],
+    evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level (B/C/D)" })
+  },
   {
     id: "crater_crack",
     ref: "1.2",
@@ -991,22 +998,22 @@ const DEFECTS = [
   },
 
   // ---------- INTERNAL IMPERFECTIONS ----------
-  {
-    id: "lack_of_fusion",
-    ref: "1.5",
-    name: "Lack of fusion",
-    inputs: [
-      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
-      { key: "h", label: "Defect height h (mm)", min: 0 }
-    ],
-    evaluate: (v, level) => {
-      const { t, h } = v;
-      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-      if (level === "B" || level === "C" || level === "D") return { ok: false, limit: "Not permitted for all three levels" };
-      // const limit = Math.min(0.4 * t, 4);
-      // return { ok: h <= limit, limit: `h ≤ min(0.4·t, 4) = ${limit.toFixed(2)} mm (Level D only, intermittent)` };
-    }
-  },
+  // {
+  //   id: "lack_of_fusion",
+  //   ref: "1.5",
+  //   name: "Lack of fusion",
+  //   inputs: [
+  //     { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+  //     { key: "h", label: "Defect height h (mm)", min: 0 }
+  //   ],
+  //   evaluate: (v, level) => {
+  //     const { t, h } = v;
+  //     if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+  //     if (level === "B" || level === "C" || level === "D") return { ok: false, limit: "Not permitted for all three levels" };
+  //     // const limit = Math.min(0.4 * t, 4);
+  //     // return { ok: h <= limit, limit: `h ≤ min(0.4·t, 4) = ${limit.toFixed(2)} mm (Level D only, intermittent)` };
+  //   }
+  // },
   {
     id: "lack_of_penetration",
     ref: "2.2",
