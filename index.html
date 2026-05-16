@@ -1016,7 +1016,7 @@ const DEFECTS = [
   // },
   {
     id: "lack_of_penetration",
-    ref: "2.2",
+    ref: "1.6",
     name: "Lack of penetration",
     inputs: [
       { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
@@ -1025,13 +1025,10 @@ const DEFECTS = [
     evaluate: (v, level) => {
       const { t, h } = v;
       if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
-      if (level === "C") {
-        const limit = Math.min(0.1 * t, 1.5);
-        return { ok: h <= limit, limit: `h ≤ min(0.1·t, 1.5) = ${limit.toFixed(2)} mm (short only)` };
-      }
-      const limit = Math.min(0.2 * t, 2);
-      return { ok: h <= limit, limit: `h ≤ min(0.2·t, 2) = ${limit.toFixed(2)} mm (Level D)` };
+      if (level === "B" || level === "C") return { ok: false, limit: "Not permitted (Level B & Level C)" };
+      if (level === "D") {
+        const limit = Math.min(0.2 * t, 2.0);
+        return { ok: h <= limit, limit: `h ≤ min(0.2·t, 2.0) = ${limit.toFixed(2)} mm (short only)` };
     }
   },
   {
