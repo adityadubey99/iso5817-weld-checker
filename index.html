@@ -703,98 +703,98 @@ const DEFECTS = [
     inputs: [],
     evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level (B/C/D)" })
   },
-  {
-    id: "surface_pore",
-    ref: "1.3",
-    name: "Surface pore",
-    inputs: [
-      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
-      { key: "d", label: "Pore diameter d (mm)", min: 0 }
-    ],
-    evaluate: (v, level) => {
-      const { t, d } = v;
-      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
-      const factor = level === "C" ? 0.2 : 0.3;
-      const capVal = level === "C" ? 2 : 3;
-      const limit = Math.min(factor * t, capVal);
-      return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm (single pore, isolated)` };
-    }
-  },
-  {
-    id: "end_crater_pipe",
-    ref: "1.4",
-    name: "End crater pipe",
-    inputs: [
-      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
-      { key: "h", label: "End crater pipe depth h (mm)", min: 0 }
-    ],
+//   {
+//     id: "surface_pore",
+//     ref: "1.3",
+//     name: "Surface pore",
+//     inputs: [
+//       { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+//       { key: "d", label: "Pore diameter d (mm)", min: 0 }
+//     ],
+//     evaluate: (v, level) => {
+//       const { t, d } = v;
+//       if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+//       if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+//       const factor = level === "C" ? 0.2 : 0.3;
+//       const capVal = level === "C" ? 2 : 3;
+//       const limit = Math.min(factor * t, capVal);
+//       return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm (single pore, isolated)` };
+//     }
+//   },
+//   {
+//     id: "end_crater_pipe",
+//     ref: "1.4",
+//     name: "End crater pipe",
+//     inputs: [
+//       { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+//       { key: "h", label: "End crater pipe depth h (mm)", min: 0 }
+//     ],
 
-         evaluate: (v, level) => {
-      const { t, h } = v;
-      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-      if (t < 3) {
-        // Short weld category: h ≤ 0.1·t (B not permitted for smooth, but simplified here)
-        const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
-        const limit = factor * t;
-        return { ok: h <= limit, limit: `h ≤ ${factor}·t = ${limit.toFixed(2)} mm (0.5 ≤ t < 3)` };
-      }
-      // t ≥ 3
-      const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
-      const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
-      return cap(h, factor, t, capVal); 
-    }
-  },
-   {
-    id: "lack_of_fusion",
-    ref: "1.5",
-    name: "Lack of fusion",
-    inputs: [],
-    evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level (B/C/D)" })
-  },
-{
-    id: "lack_of_penetration",
-    ref: "1.6",
-    name: "Lack of penetration",
-    inputs: [
-      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
-      { key: "h", label: "Defect height h (mm)", min: 0 }
-    ],
-    evaluate: (v, level) => {
-      const { t, h } = v;
-      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-      if (level === "B" || level === "C") return { ok: false, limit: "Not permitted (Level B & Level C)" };
-      if (level === "D") {
-        const limit = Math.min(0.2 * t, 2.0);
-        return { ok: h <= limit, limit: `h ≤ min(0.2·t, 2.0) = ${limit.toFixed(2)} mm (short only)` };
-    }
-  }
-},
- {
-    id: "undercut_continuous",
-    ref: "1.7",
-    name: "Undercut ",
-    inputs: [
-      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
-      { key: "h", label: "Groove depth h (mm)", min: 0 }
-    ],
-    evaluate: (v, level) => {
-      const { t, h } = v;
-      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+//          evaluate: (v, level) => {
+//       const { t, h } = v;
+//       if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+//       if (t < 3) {
+//         // Short weld category: h ≤ 0.1·t (B not permitted for smooth, but simplified here)
+//         const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+//         const limit = factor * t;
+//         return { ok: h <= limit, limit: `h ≤ ${factor}·t = ${limit.toFixed(2)} mm (0.5 ≤ t < 3)` };
+//       }
+//       // t ≥ 3
+//       const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+//       const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
+//       return cap(h, factor, t, capVal); 
+//     }
+//   },
+//    {
+//     id: "lack_of_fusion",
+//     ref: "1.5",
+//     name: "Lack of fusion",
+//     inputs: [],
+//     evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level (B/C/D)" })
+//   },
+// {
+//     id: "lack_of_penetration",
+//     ref: "1.6",
+//     name: "Lack of penetration",
+//     inputs: [
+//       { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+//       { key: "h", label: "Defect height h (mm)", min: 0 }
+//     ],
+//     evaluate: (v, level) => {
+//       const { t, h } = v;
+//       if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+//       if (level === "B" || level === "C") return { ok: false, limit: "Not permitted (Level B & Level C)" };
+//       if (level === "D") {
+//         const limit = Math.min(0.2 * t, 2.0);
+//         return { ok: h <= limit, limit: `h ≤ min(0.2·t, 2.0) = ${limit.toFixed(2)} mm (short only)` };
+//     }
+//   }
+// },
+//  {
+//     id: "undercut_continuous",
+//     ref: "1.7",
+//     name: "Undercut ",
+//     inputs: [
+//       { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+//       { key: "h", label: "Groove depth h (mm)", min: 0 }
+//     ],
+//     evaluate: (v, level) => {
+//       const { t, h } = v;
+//       if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
       
-      if (t < 3.0 && level === "B") {
-       return { ok: false, limit: "Not permitted for t < 3 mm at level B" };
-      }
-     if (t < 3.0){
-      const factor = level === "C" ? 0.1 : level === "D" ? 0.2;
-      const limit = factor * t;
-      return {ok : h <= limit, limit: `h ≤ ${factor.toFixed(1)}·t = ${limit.toFixed(2)} mm`}; 
-     }
-      const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
-      const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
-      return cap(h, factor, t, capVal);
-    }
-},
+//       if (t < 3.0 && level === "B") {
+//        return { ok: false, limit: "Not permitted for t < 3 mm at level B" };
+//       }
+//      if (t < 3.0){
+//       const factor = level === "C" ? 0.1 : level === "D" ? 0.2;
+//       const limit = factor * t;
+//       return {ok : h <= limit, limit: `h ≤ ${factor.toFixed(1)}·t = ${limit.toFixed(2)} mm`}; 
+//      }
+//       const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
+//       const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
+//       return cap(h, factor, t, capVal);
+//     }
+// },
  
   {
     id: "shrinkage_groove",
