@@ -703,24 +703,24 @@ const DEFECTS = [
     inputs: [],
     evaluate: (v, level) => ({ ok: false, limit: "Not permitted for any quality level (B/C/D)" })
   },
-//   {
-//     id: "surface_pore",
-//     ref: "1.3",
-//     name: "Surface pore",
-//     inputs: [
-//       { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
-//       { key: "d", label: "Pore diameter d (mm)", min: 0 }
-//     ],
-//     evaluate: (v, level) => {
-//       const { t, d } = v;
-//       if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-//       if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
-//       const factor = level === "C" ? 0.2 : 0.3;
-//       const capVal = level === "C" ? 2 : 3;
-//       const limit = Math.min(factor * t, capVal);
-//       return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm (single pore, isolated)` };
-//     }
-//   },
+  {
+    id: "surface_pore",
+    ref: "1.3",
+    name: "Surface pore",
+    inputs: [
+      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
+      { key: "d", label: "Pore diameter d (mm)", min: 0 }
+    ],
+    evaluate: (v, level) => {
+      const { t, d } = v;
+      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
+      if (level === "B") return { ok: false, limit: "Not permitted (Level B)" };
+      const factor = level === "C" ? 0.2 : 0.3;
+      const capVal = level === "C" ? 2 : 3;
+      const limit = Math.min(factor * t, capVal);
+      return { ok: d <= limit, limit: `d ≤ min(${factor}·t, ${capVal}) = ${limit.toFixed(2)} mm (single pore, isolated)` };
+    }
+  },
 //   {
 //     id: "end_crater_pipe",
 //     ref: "1.4",
