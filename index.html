@@ -856,9 +856,10 @@ const DEFECTS = [
     inputs: [
       { key: "b", label: "Weld width b (mm)", min: 0 },
       { key: "h", label: "Penetration excess h (mm)", min: 0 }
+      { key: "t", label: "Base metal thickness (mm)", min: 0.5}
     ],
     evaluate: (v, level) => {
-      const { b, h } = v;
+      const { b, h, t } = v;
       const factor = level === "B" ? 0.1 : level === "C" ? 0.2 : 0.25;
       const capVal = level === "B" ? 3 : level === "C" ? 4 : 5;
       const limit = Math.min(1 + factor * b, capVal);
