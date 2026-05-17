@@ -798,7 +798,7 @@ const DEFECTS = [
 {
     id: "shrinkage_groove",
     ref: "1.8",
-    name: "Shrinkage Groove",
+    name: "Shrinkage groove",
     inputs: [
       { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
       { key: "h", label: "Groove depth h (mm)", min: 0 }
@@ -817,24 +817,6 @@ const DEFECTS = [
     }
 },
 
- 
-  {
-    id: "shrinkage_groove",
-    ref: "1.8",
-    name: "Shrinkage groove",
-    inputs: [
-      { key: "t", label: "Wall thickness t (mm)", min: 0.5 },
-      { key: "h", label: "Groove depth h (mm)", min: 0 }
-    ],
-    evaluate: (v, level) => {
-      const { t, h } = v;
-      if (t < 0.5) return { na: true, reason: "Applies for t ≥ 0.5 mm" };
-     if (t < 3.0 && level === "B") return { ok: false, limit: "Not permitted for level B"};
-      const factor = level === "B" ? 0.05 : level === "C" ? 0.1 : 0.2;
-      const capVal = level === "B" ? 0.5 : level === "C" ? 0.5 : 1.0;
-      return cap(h, factor, t, capVal);
-    }
-  },
   {
     id: "excess_weld_metal",
     ref: "1.9",
